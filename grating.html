@@ -1,0 +1,121 @@
+<html>
+<head>
+    <title></title>
+    <style id="compiled-css" type="text/css">
+		:root {
+			--angle: -45deg;
+			--endpos: -140px;
+			--stripesize: 50px;
+			--stripesizex2: 100px;
+			--period: 2s;
+		}
+
+		.animationStripes{
+		  width: 300px;
+		  height: 150px;
+		  background-image: repeating-linear-gradient(var(--angle), rgb(0, 0, 0), rgb(0, 0, 0) var(--stripesize), white var(--stripesize), white var(--stripesizex2));
+		  -webkit-animation:progress var(--period) linear infinite;
+		  -moz-animation:progress var(--period) linear infinite;
+		  -ms-animation:progress var(--period) linear infinite;
+		  animation:progress var(--period) linear infinite;
+		  background-size: 250% 100%;
+		}
+
+		@-webkit-keyframes progress{
+		  0% {
+			background-position: 0 0;
+		  }
+		  100% {
+			background-position: var(--endpos) 0px;
+		  }
+		}
+		@-moz-keyframes progress{
+		  0% {
+			background-position: 0 0;
+		  }
+		  100% {
+			background-position: var(--endpos) 0px;
+		  }
+		}
+		@-ms-keyframes progress{
+		  0% {
+			background-position: 0 0;
+		  }
+		  100% {
+			background-position: var(--endpos) 0px;
+		  }
+		}
+		@keyframes progress{
+		  0% {
+			background-position: 0 0;
+		  }
+		  100% {
+			background-position: var(--endpos) 0px;
+		  }
+		}
+
+		.inputs {
+			margin: 30px;
+		}
+    </style>
+  </head>
+  <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<div class="inputs">
+		Angle: <input id="angle" type="number" value="45" style="width: 50px; margin-right: 15px;" />
+		Size: <input id="size" type="number" value="50" style="width: 50px;" />
+		<p/>
+		Period: <input id="period" type="number" value="2" style="width: 50px;" />
+		<p><button onclick="update()" text="Update">Update</button></p>
+		<p id="debug"></p>
+	</div>
+    <div id="fullscreen" class="animationStripes"></div>
+
+    <script type="text/javascript">
+		function update() {
+			size = $('#size').get(0).value;
+			inangle = parseInt($('#angle').get(0).value);
+			angle = 90 + inangle;
+			document.documentElement.style.setProperty('--angle', angle+'deg');
+			endpos = size / Math.cos(inangle * Math.PI/180) * 2;
+			document.documentElement.style.setProperty('--endpos', '-'+endpos+'px');
+			document.documentElement.style.setProperty('--stripesize', size+'px');
+			document.documentElement.style.setProperty('--stripesizex2', (size*2)+'px');
+			period = $('#period').get(0).value;
+			document.documentElement.style.setProperty('--period', period+'s');
+		}
+		
+		$('#fullscreen').on('click', function(){
+		  // if already full screen; exit
+		  // else go fullscreen
+		  if (
+			document.fullscreenElement ||
+			document.webkitFullscreenElement ||
+			document.mozFullScreenElement ||
+			document.msFullscreenElement
+		  ) {
+			if (document.exitFullscreen) {
+			  document.exitFullscreen();
+			} else if (document.mozCancelFullScreen) {
+			  document.mozCancelFullScreen();
+			} else if (document.webkitExitFullscreen) {
+			  document.webkitExitFullscreen();
+			} else if (document.msExitFullscreen) {
+			  document.msExitFullscreen();
+			}
+		  } else {
+			element = $('#fullscreen').get(0);
+			if (element.requestFullscreen) {
+			  element.requestFullscreen();
+			} else if (element.mozRequestFullScreen) {
+			  element.mozRequestFullScreen();
+			} else if (element.webkitRequestFullscreen) {
+			  element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+			} else if (element.msRequestFullscreen) {
+			  element.msRequestFullscreen();
+			}
+		  }
+		});
+  </script>
+</body>
+</html>
