@@ -1,121 +1,238 @@
 <html>
 <head>
-    <title></title>
-    <style id="compiled-css" type="text/css">
+	<title></title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<style id="compiled-css" type="text/css">
 		:root {
-			--angle: -45deg;
-			--endpos: -140px;
+			--angle: 90deg;
+			--dir: left;
+			--endpos: -100px;
 			--stripesize: 50px;
 			--stripesizex2: 100px;
-			--period: 2s;
+			--period: 1s;
+			--color1: black;
+			--color2: white;
 		}
 
 		.animationStripes{
-		  width: 300px;
-		  height: 150px;
-		  background-image: repeating-linear-gradient(var(--angle), rgb(0, 0, 0), rgb(0, 0, 0) var(--stripesize), white var(--stripesize), white var(--stripesizex2));
-		  -webkit-animation:progress var(--period) linear infinite;
-		  -moz-animation:progress var(--period) linear infinite;
-		  -ms-animation:progress var(--period) linear infinite;
-		  animation:progress var(--period) linear infinite;
-		  background-size: 250% 100%;
+			width: 300px;
+			height: 200px;
+			background-image: repeating-linear-gradient(var(--angle), var(--color1), var(--color1) var(--stripesize), var(--color2) var(--stripesize), var(--color2) var(--stripesizex2));
+			-webkit-animation:progress var(--period) linear infinite;
+			-moz-animation:progress var(--period) linear infinite;
+			-ms-animation:progress var(--period) linear infinite;
+			animation:progress var(--period) linear infinite;
+			background-size: 300% 300%;
 		}
 
 		@-webkit-keyframes progress{
-		  0% {
-			background-position: 0 0;
-		  }
-		  100% {
-			background-position: var(--endpos) 0px;
-		  }
+			0% {
+			background-position: center var(--dir);
+			}
+			100% {
+			background-position: center var(--dir) var(--endpos);
+			}
 		}
 		@-moz-keyframes progress{
-		  0% {
-			background-position: 0 0;
-		  }
-		  100% {
-			background-position: var(--endpos) 0px;
-		  }
+			0% {
+			background-position: center var(--dir);
+			}
+			100% {
+			background-position: center var(--dir) var(--endpos);
+			}
 		}
 		@-ms-keyframes progress{
-		  0% {
-			background-position: 0 0;
-		  }
-		  100% {
-			background-position: var(--endpos) 0px;
-		  }
+			0% {
+			background-position: center var(--dir);
+			}
+			100% {
+			background-position: center var(--dir) var(--endpos);
+			}
 		}
 		@keyframes progress{
-		  0% {
-			background-position: 0 0;
-		  }
-		  100% {
-			background-position: var(--endpos) 0px;
-		  }
+			0% {
+			background-position: center var(--dir);
+			}
+			100% {
+			background-position: center var(--dir) var(--endpos);
+			}
 		}
 
-		.inputs {
+		.inputs, .config {
 			margin: 30px;
 		}
-    </style>
-  </head>
-  <body>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	</style>
+</head>
+<body>
+	<div class="config">
+		Load Config: <input type="file" id="upload" />
+		<p/>
+		Save Config: <input type="text" id="download" value="Treadmill.json" /><button onclick="download()">Save</button>
+	</div>
 	<div class="inputs">
-		Angle: <input id="angle" type="number" value="45" style="width: 50px; margin-right: 15px;" />
+	<div>
+		<p>
+		Color 1: <input id="color1" type="color" value="#000000" />
+		Color 2: <input id="color2" type="color" value="#ffffff" />
+		</p>
+	</div>
+	<div id="inp-0">
+		<p>Segment 1</p>
+		Direction: <select id="direction">
+			<option value="L">Left</option>
+			<option value="R">Right</option>
+			<option value="U">Up</option>
+			<option value="D">Down</option>
+		</select>
+		<p/>
+		Angle: <input id="angle" type="text" inputmode="numeric" value="0" style="width: 50px; margin-right: 15px;" />
 		Size: <input id="size" type="number" value="50" style="width: 50px;" />
 		<p/>
-		Period: <input id="period" type="number" value="2" style="width: 50px;" />
-		<p><button onclick="update()" text="Update">Update</button></p>
-		<p id="debug"></p>
+		Speed: <input id="speed" type="number" value="100" style="width: 50px;" /> px/s
 	</div>
-    <div id="fullscreen" class="animationStripes"></div>
+	</div>
+	<p id="debug"></p>
+	<button onclick="update()">Update</button>
+	<div id="fullscreen" class="animationStripes"></div>
 
-    <script type="text/javascript">
+	<script type="text/javascript">
+		// update the animated stripes
 		function update() {
 			size = $('#size').get(0).value;
 			inangle = parseInt($('#angle').get(0).value);
-			angle = 90 + inangle;
-			document.documentElement.style.setProperty('--angle', angle+'deg');
+			dir=$('#direction')[0].value;
 			endpos = size / Math.cos(inangle * Math.PI/180) * 2;
+			if (dir=="L") {
+				angle = 90 + inangle;
+				relpos = "left";
+			}
+			else if (dir=="R") {
+				angle = -90 + inangle;
+				relpos = "right";
+			}
+			else if (dir=="U") {
+				angle = inangle;
+				relpos = "top";
+			}
+			else if (dir=="D") {
+				angle = 180 + inangle;
+				relpos = "bottom";
+			}
+			document.documentElement.style.setProperty('--angle', angle+'deg');
+			document.documentElement.style.setProperty('--dir', relpos);
 			document.documentElement.style.setProperty('--endpos', '-'+endpos+'px');
 			document.documentElement.style.setProperty('--stripesize', size+'px');
 			document.documentElement.style.setProperty('--stripesizex2', (size*2)+'px');
-			period = $('#period').get(0).value;
+			period = 2*size/$('#speed').get(0).value;
 			document.documentElement.style.setProperty('--period', period+'s');
+			color1 = $('#color1').get(0).value;
+			color2 = $('#color2').get(0).value;
+			document.documentElement.style.setProperty('--color1', color1);
+			document.documentElement.style.setProperty('--color2', color2);
 		}
 		
+		// read uploaded config file
+		const fileInput = document.getElementById('upload');
+		fileInput.addEventListener('change', (event) => {
+			//$('#debug').html("read");
+			const file = event.target.files[0];
+			const reader = new FileReader();
+
+			reader.onload = (event) => {
+				readConfig(event.target.result);
+			};
+
+			reader.onerror = (event) => {
+				console.error("File could not be read! Code " + event.target.error.code);
+			};
+
+			reader.readAsText(file);
+		});
+
+		function readConfig(text) {
+			// read the json and set all the controls
+			json = JSON.parse(text);
+			if (json.id != "Optical Treadmill") {
+				alert("Invalid config file")
+				return;
+			}
+			// top level config
+			$('#color1')[0].value = json.color1;
+			$('#color2')[0].value = json.color2;
+			// segment config
+			seg = json.segments[0];
+			$('#inp-0 #direction')[0].value = seg.dir;
+			$('#inp-0 #angle')[0].value = seg.angle;
+			$('#inp-0 #size')[0].value = seg.size;
+			$('#inp-0 #speed')[0].value = seg.speed;
+		}
+
+		function download() {
+			// get the state of the controls and write the json
+			// segments config
+			dir=$('#inp-0 #dir')[0].value;
+			angle=$('#inp-0 #angle')[0].value;
+			size=$('#inp-0 #size')[0].value;
+			speed=$('#inp-0 #speed')[0].value;
+			seg={"dir": dir, "angle": angle, "size": size, "speed": speed};
+			// top level config
+			color1=$('#color1')[0].value;
+			color2=$('#color2')[0].value;
+			config={"id": "Optical Treadmill", "color1": color1, "color2": color2, "segments": [seg]};
+			// write the json
+			text=JSON.stringify(config);
+			filename=$('#download')[0].value;
+			if (filename=="") filename="Treadmill.json";
+			downloadTextAsFile(text, filename);
+		}
+
+		// download config file
+		function downloadTextAsFile(text, filename) {
+			const blob = new Blob([text], { type: "text/plain" });
+			const url = URL.createObjectURL(blob);
+
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = filename;
+
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		}
+
+		// fullscreen the stripes
 		$('#fullscreen').on('click', function(){
-		  // if already full screen; exit
-		  // else go fullscreen
-		  if (
+			// if already full screen; exit
+			// else go fullscreen
+			if (
 			document.fullscreenElement ||
 			document.webkitFullscreenElement ||
 			document.mozFullScreenElement ||
 			document.msFullscreenElement
-		  ) {
+			) {
 			if (document.exitFullscreen) {
-			  document.exitFullscreen();
+				document.exitFullscreen();
 			} else if (document.mozCancelFullScreen) {
-			  document.mozCancelFullScreen();
+				document.mozCancelFullScreen();
 			} else if (document.webkitExitFullscreen) {
-			  document.webkitExitFullscreen();
+				document.webkitExitFullscreen();
 			} else if (document.msExitFullscreen) {
-			  document.msExitFullscreen();
+				document.msExitFullscreen();
 			}
-		  } else {
+			} else {
 			element = $('#fullscreen').get(0);
 			if (element.requestFullscreen) {
-			  element.requestFullscreen();
+				element.requestFullscreen();
 			} else if (element.mozRequestFullScreen) {
-			  element.mozRequestFullScreen();
+				element.mozRequestFullScreen();
 			} else if (element.webkitRequestFullscreen) {
-			  element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+				element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
 			} else if (element.msRequestFullscreen) {
-			  element.msRequestFullscreen();
+				element.msRequestFullscreen();
 			}
-		  }
+			}
 		});
-  </script>
+	</script>
 </body>
 </html>
