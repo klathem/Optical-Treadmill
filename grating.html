@@ -61,24 +61,54 @@
 
 		.inputs, .config {
 			margin: 30px;
+			width: 100%;
+		}
+
+		.txtedit {
+			width: 55px;
+			margin-right: 15px;
+		}
+
+		.segment {
+			padding: 0 12 0 12;
+			width: 300px;
+			border: 1px dashed gray;
+		}
+
+		.segedit {
+			float: right;
+			border-radius: 50%;
+			border: 2px solid gray;
+			height: 25;
+			width: 25;
+			font-weight: bold;
+			color: gray;
 		}
 	</style>
 </head>
 <body>
 	<div class="config">
+		<p>
 		Load Config: <input type="file" id="upload" />
-		<p/>
+		</p>
 		Save Config: <input type="text" id="download" value="Treadmill.json" /><button onclick="download()">Save</button>
 	</div>
 	<div class="inputs">
-	<div>
 		<p>
 		Color 1: <input id="color1" type="color" value="#000000" />
 		Color 2: <input id="color2" type="color" value="#ffffff" />
 		</p>
+		<p>
+		Delay: <input id="delay" type="text" inputmode="numeric" value="0" class="txtedit" /> sec <button style="margin-left: 15px;" onclick="start()">Start</button>
+		</p>
 	</div>
-	<div id="inp-0">
-		<p>Segment 1</p>
+	<div id="inputs" class="inputs">
+	<div id="inp-0" class="segment">
+		<p>
+		<span id="head">Segment 1</span>
+		<button onclick="delseg(this)" class="segedit">–</button>
+		</p>
+		<p/>
 		Direction: <select id="direction">
 			<option value="L">Left</option>
 			<option value="R">Right</option>
@@ -86,22 +116,45 @@
 			<option value="D">Down</option>
 		</select>
 		<p/>
-		Angle: <input id="angle" type="text" inputmode="numeric" value="0" style="width: 50px; margin-right: 15px;" />
-		Size: <input id="size" type="number" value="50" style="width: 50px;" />
+		Angle: <input id="angle" class="txtedit" type="text" inputmode="numeric" value="0" />
+		Size: <input id="size" class="txtedit" type="number" value="50" />
 		<p/>
-		Speed: <input id="speed" type="number" value="100" style="width: 50px;" /> px/s
+		Speed: <input id="speed" class="txtedit" type="number" value="100" />px/s
+		<p/>
+		Duration: <input id="duration" class="txtedit" type="number" value="60" />min
+		<button onclick="newseg(this)" class="segedit">+</button>
 	</div>
 	</div>
 	<p id="debug"></p>
-	<button onclick="update()">Update</button>
 	<div id="fullscreen" class="animationStripes"></div>
 
 	<script type="text/javascript">
+		// segment storage
+		localStorage.segments = JSON.stringify([0]);
+		// make a backup copy of the segment div to copy from later
+		backup = $('#inp-0').clone(true).get(0);
+		backup.id = 'backup';
+		backup.style.display = 'none';
+		$('body').append(backup);
+
+		// countdown then start the treadmill
+		function start() {
+			document.documentElement.style.setProperty('--color1', 'black');
+			document.documentElement.style.setProperty('--color2', 'black');
+			document.documentElement.style.setProperty('--endpos', '0px');
+			gofull();
+			delay = parseInt($('#delay').get(0).value)*1000;
+			setTimeout(() => update(0), delay)
+		}
+
 		// update the animated stripes
-		function update() {
-			size = $('#size').get(0).value;
-			inangle = parseInt($('#angle').get(0).value);
-			dir=$('#direction')[0].value;
+		function update(index) {
+			segs = JSON.parse(localStorage.segments);
+			segid = segs[index];
+			seg = $('#inp-'+segid);
+			size = seg.find('#size').get(0).value;
+			inangle = parseInt(seg.find('#angle').get(0).value);
+			dir=seg.find('#direction')[0].value;
 			endpos = size / Math.cos(inangle * Math.PI/180) * 2;
 			if (dir=="L") {
 				angle = 90 + inangle;
@@ -124,18 +177,63 @@
 			document.documentElement.style.setProperty('--endpos', '-'+endpos+'px');
 			document.documentElement.style.setProperty('--stripesize', size+'px');
 			document.documentElement.style.setProperty('--stripesizex2', (size*2)+'px');
-			period = 2*size/$('#speed').get(0).value;
+			period = 2*size/seg.find('#speed').get(0).value;
 			document.documentElement.style.setProperty('--period', period+'s');
 			color1 = $('#color1').get(0).value;
 			color2 = $('#color2').get(0).value;
 			document.documentElement.style.setProperty('--color1', color1);
 			document.documentElement.style.setProperty('--color2', color2);
+			if (index < segs.length - 1) {
+				duration = parseFloat(seg.find('#duration').get(0).value)*60*1000;
+				setTimeout(() => update(index+1), duration)
+			}
+			//$('#debug').html("debug");
+		}
+
+		function newseg(element) {
+			$('#debug').html("debug");
+			// load the segments array
+			segs = JSON.parse(localStorage.segments);
+			// copy the segment node
+			base = element.parentElement.parentElement;
+			baseid = base.id.split('-')[1];
+			clone = base.cloneNode(true);
+			// set the new segment id
+			newid = Math.max(...segs) + 1;
+			clone.id = "inp-" + newid;
+			// append the new segment node
+			base.after(clone);
+			// also copy the direction selection
+			$('#'+clone.id+' #direction')[0].value = $('#'+base.id+' #direction')[0].value
+			// update the segments array
+			ind = segs.findIndex(n => n == baseid);
+			segs.splice(ind+1, 0, newid);
+			localStorage.segments = JSON.stringify(segs);
+			// update all segment headers
+			$('#inputs span').each(function(index){$(this).text('Segment '+(index+1))});
+			//$('#debug').html(localStorage.segments);
+		}
+		
+		function delseg(element) {
+			// load the segments array
+			segs = JSON.parse(localStorage.segments);
+			// find the segment to remove
+			base = element.parentElement.parentElement;
+			baseid = base.id.split('-')[1];
+			// remove it
+			base.remove();
+			// update the segments array
+			ind = segs.findIndex(n => n == baseid);
+			segs.splice(ind, 1);
+			localStorage.segments = JSON.stringify(segs);
+			// update all segment headers
+			$('#inputs span').each(function(index){$(this).text('Segment '+(index+1))});
+			//$('#debug').html(localStorage.segments);
 		}
 		
 		// read uploaded config file
 		const fileInput = document.getElementById('upload');
 		fileInput.addEventListener('change', (event) => {
-			//$('#debug').html("read");
 			const file = event.target.files[0];
 			const reader = new FileReader();
 
@@ -160,31 +258,56 @@
 			// top level config
 			$('#color1')[0].value = json.color1;
 			$('#color2')[0].value = json.color2;
+			$('#delay')[0].value = json.delay;
 			// segment config
-			seg = json.segments[0];
-			$('#inp-0 #direction')[0].value = seg.dir;
-			$('#inp-0 #angle')[0].value = seg.angle;
-			$('#inp-0 #size')[0].value = seg.size;
-			$('#inp-0 #speed')[0].value = seg.speed;
+			segs = json.segments;
+			// remove existing input segments
+			$('#inputs > div').remove();
+			storsegs = [];
+			segs.forEach(function(seg, index) {
+				// create a new segment
+				newseg = $('#backup').clone(true);
+				newseg.get(0).id = 'inp-' + index;
+				newseg.get(0).style.display = 'block';
+				newseg.find('#head').text('Segment '+(index+1));
+				newseg.find('#direction').get(0).value = seg.dir;
+				newseg.find('#angle').get(0).value = seg.angle;
+				newseg.find('#size').get(0).value = seg.size;
+				newseg.find('#speed').get(0).value = seg.speed;
+				newseg.find('#duration').get(0).value = seg.duration;
+				// append the segment node
+				$('#inputs').append(newseg);
+				storsegs.push(index);
+			});
+			// local storage
+			localStorage.segments = JSON.stringify(storsegs);
+			//$('#debug').html(localStorage.segments);
 		}
 
 		function download() {
 			// get the state of the controls and write the json
 			// segments config
-			dir=$('#inp-0 #dir')[0].value;
-			angle=$('#inp-0 #angle')[0].value;
-			size=$('#inp-0 #size')[0].value;
-			speed=$('#inp-0 #speed')[0].value;
-			seg={"dir": dir, "angle": angle, "size": size, "speed": speed};
+			segs = [];
+			$('#inputs > div').each(function(index) {
+				dir = $(this).find('#direction')[0].value;
+				angle = $(this).find('#angle')[0].value;
+				size = $(this).find('#size')[0].value;
+				speed = $(this).find('#speed')[0].value;
+				duration = $(this).find('#duration')[0].value;
+				seg={"dir": dir, "angle": angle, "size": size, "speed": speed, "duration": duration};
+				segs.push(seg);
+			});
 			// top level config
 			color1=$('#color1')[0].value;
 			color2=$('#color2')[0].value;
-			config={"id": "Optical Treadmill", "color1": color1, "color2": color2, "segments": [seg]};
+			delay=$('#delay')[0].value;
+			config={"id": "Optical Treadmill", "color1": color1, "color2": color2, "delay": delay, "segments": segs};
 			// write the json
 			text=JSON.stringify(config);
 			filename=$('#download')[0].value;
 			if (filename=="") filename="Treadmill.json";
 			downloadTextAsFile(text, filename);
+			//$('#debug').html(JSON.stringify(segs));
 		}
 
 		// download config file
@@ -221,6 +344,11 @@
 				document.msExitFullscreen();
 			}
 			} else {
+				gofull();
+			}
+		});
+
+		function gofull() {
 			element = $('#fullscreen').get(0);
 			if (element.requestFullscreen) {
 				element.requestFullscreen();
@@ -231,8 +359,7 @@
 			} else if (element.msRequestFullscreen) {
 				element.msRequestFullscreen();
 			}
-			}
-		});
+		}
 	</script>
 </body>
 </html>
