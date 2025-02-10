@@ -100,6 +100,7 @@
 		</p>
 		<p>
 		Delay: <input id="delay" type="text" inputmode="numeric" value="0" class="txtedit" /> sec <button style="margin-left: 15px;" onclick="start()">Start</button>
+		<input id="infinite" type="checkbox" checked style="margin-left: 25px;" /><label for="infinite">Infinite Loop</label>
 		</p>
 	</div>
 	<div id="inputs" class="inputs">
@@ -121,7 +122,7 @@
 		<p/>
 		Speed: <input id="speed" class="txtedit" type="number" value="100" />px/s
 		<p/>
-		Duration: <input id="duration" class="txtedit" type="number" value="60" />min
+		Duration: <input id="duration" class="txtedit" type="number" value="60" />sec
 		<button onclick="newseg(this)" class="segedit">+</button>
 	</div>
 	</div>
@@ -131,20 +132,28 @@
 	<script type="text/javascript">
 		// segment storage
 		localStorage.segments = JSON.stringify([0]);
+		localStorage.timeoutID = '';
 		// make a backup copy of the segment div to copy from later
 		backup = $('#inp-0').clone(true).get(0);
 		backup.id = 'backup';
 		backup.style.display = 'none';
 		$('body').append(backup);
 
-		// countdown then start the treadmill
-		function start() {
+		// set to black
+		function setBlack() {
 			document.documentElement.style.setProperty('--color1', 'black');
 			document.documentElement.style.setProperty('--color2', 'black');
 			document.documentElement.style.setProperty('--endpos', '0px');
+		}
+
+		// countdown then start the treadmill
+		function start() {
+			clearTimeout(parseInt(localStorage.timeoutID));
+			setBlack();
 			gofull();
 			delay = parseInt($('#delay').get(0).value)*1000;
-			setTimeout(() => update(0), delay)
+			id = setTimeout(() => update(0), delay);
+			localStorage.timeoutID = id;
 		}
 
 		// update the animated stripes
@@ -183,15 +192,20 @@
 			color2 = $('#color2').get(0).value;
 			document.documentElement.style.setProperty('--color1', color1);
 			document.documentElement.style.setProperty('--color2', color2);
-			if (index < segs.length - 1) {
-				duration = parseFloat(seg.find('#duration').get(0).value)*60*1000;
-				setTimeout(() => update(index+1), duration)
+			duration = parseFloat(seg.find('#duration').get(0).value)*1000;
+			if ($('#infinite').is(":checked") || index < segs.length - 1) {
+				// if infinite loop
+				setTimeout(() => update((index+1) % segs.length), duration)
+			}
+			else {
+				// if not infinite and we are on the last segment, we are done
+				setTimeout(() => setBlack(), duration);
 			}
 			//$('#debug').html("debug");
 		}
 
 		function newseg(element) {
-			$('#debug').html("debug");
+			//$('#debug').html("debug");
 			// load the segments array
 			segs = JSON.parse(localStorage.segments);
 			// copy the segment node
