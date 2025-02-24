@@ -105,10 +105,9 @@
 	</div>
 	<div id="inputs" class="inputs">
 	<div id="inp-0" class="segment">
-		<p>
+		<p/>
 		<span id="head">Segment 1</span>
 		<button onclick="delseg(this)" class="segedit">–</button>
-		</p>
 		<p/>
 		Direction: <select id="direction">
 			<option value="L">Left</option>
@@ -134,10 +133,10 @@
 		localStorage.segments = JSON.stringify([0]);
 		localStorage.timeoutID = '';
 		// make a backup copy of the segment div to copy from later
-		backup = $('#inp-0').clone(true).get(0);
-		backup.id = 'backup';
-		backup.style.display = 'none';
-		$('body').append(backup);
+		backup = $('#inp-0').clone(true);
+		backup.attr('id', 'backup');
+		backup.attr('style', 'display:none');
+		backup.appendTo('body');
 
 		// set to black
 		function setBlack() {
@@ -205,20 +204,21 @@
 		}
 
 		function newseg(element) {
+			// element is the DOM element
 			//$('#debug').html("debug");
 			// load the segments array
 			segs = JSON.parse(localStorage.segments);
 			// copy the segment node
-			base = element.parentElement.parentElement;
-			baseid = base.id.split('-')[1];
-			clone = base.cloneNode(true);
+			base = $(element).parent().parent();
+			baseid = base.attr('id').split('-')[1];
+			clone = base.clone(true);
 			// set the new segment id
 			newid = Math.max(...segs) + 1;
-			clone.id = "inp-" + newid;
+			clone.attr("id", "inp-" + newid);
 			// append the new segment node
 			base.after(clone);
 			// also copy the direction selection
-			$('#'+clone.id+' #direction')[0].value = $('#'+base.id+' #direction')[0].value
+			clone.find('#direction').val(base.find('#direction').val());
 			// update the segments array
 			ind = segs.findIndex(n => n == baseid);
 			segs.splice(ind+1, 0, newid);
@@ -280,18 +280,19 @@
 			storsegs = [];
 			segs.forEach(function(seg, index) {
 				// create a new segment
-				newseg = $('#backup').clone(true);
-				newseg.get(0).id = 'inp-' + index;
-				newseg.get(0).style.display = 'block';
-				newseg.find('#head').text('Segment '+(index+1));
-				newseg.find('#direction').get(0).value = seg.dir;
-				newseg.find('#angle').get(0).value = seg.angle;
-				newseg.find('#size').get(0).value = seg.size;
-				newseg.find('#speed').get(0).value = seg.speed;
-				newseg.find('#duration').get(0).value = seg.duration;
+				cloneseg = $('#backup').clone(true);
+				cloneseg.attr('id', 'inp-' + index);
+				cloneseg.attr('style', 'display:block');
 				// append the segment node
-				$('#inputs').append(newseg);
+				cloneseg.appendTo('#inputs');
 				storsegs.push(index);
+				// update the values
+				cloneseg.find('#head').text('Segment '+(index+1));
+				cloneseg.find('#direction').val(seg.dir);
+				cloneseg.find('#angle').val(seg.angle);
+				cloneseg.find('#size').val(seg.size);
+				cloneseg.find('#speed').val(seg.speed);
+				cloneseg.find('#duration').val(seg.duration);
 			});
 			// local storage
 			localStorage.segments = JSON.stringify(storsegs);
