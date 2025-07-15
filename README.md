@@ -1,5 +1,5 @@
 # Optical-Treadmill
-An Optical Treadmill program to create animated stripe patterns for animal behavior studies. Requires downloading a single html file to a device which then runs in a browser.
+An Optical Treadmill program to create animated stripe patterns for animal behavior studies. Can be accessed from https://klathem.github.io/Optical-Treadmill/.
 
 ![Screenshot](demo.png)
 
