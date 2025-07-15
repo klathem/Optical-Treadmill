@@ -11,6 +11,3 @@ An Optical Treadmill program to create animated stripe patterns for animal behav
 * Configure whether to loop through the sequence infinitely or end with a black screen.
 * Configure whether to loop back to an earlier segment within the sequence and how many times.
 * Save and load configuration files to store settings to be reused.
-
-### Installation
-Just download the grating.html file to a device, and open in a browser like chrome.
